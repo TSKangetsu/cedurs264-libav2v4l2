@@ -1,0 +1,6 @@
+[submodule "thirdpart/ffmpeg-cedurs"]
+	path = thirdpart/ffmpeg-cedurs
+	url = https://github.com/TSKangetsu/FFmpeg-Cedrus
+[submodule "thirdpart/ffmpeg-h3"]
+	path = thirdpart/ffmpeg-h3
+	url = https://github.com/TSKangetsu/ffmpeg_h264_H3
