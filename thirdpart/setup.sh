@@ -1,11 +1,13 @@
+cd thirdpart/
 cp -p ffmpeg-h3/cedrus264.c ffmpeg-cedurs/libavcodec/
 cp -R ffmpeg-h3/sunxi ffmpeg-cedurs/libavcodec/arm
 
+echo "check cross $1 $2"
 cd ffmpeg-cedurs 
 ./configure \
-             --cc="arm-openwrt-linux-gcc" \
+             --cross-prefix="$1" \
              --enable-cross-compile \
-             --arch=arm \
+             --arch=$2 \
              --target-os=linux \
              --enable-gpl \
              --enable-version3 \
@@ -14,4 +16,5 @@ cd ffmpeg-cedurs
              --disable-ffserver
 
 make -j32
-make DESTDIR=/home/user/build/cedurs-h3-encoder/build  install
+mkdir -p `pwd`/../../build
+make DESTDIR=`pwd`/../../build  install
