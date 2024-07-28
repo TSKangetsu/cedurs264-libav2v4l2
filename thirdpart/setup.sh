@@ -2,12 +2,17 @@ cd thirdpart/
 cp -p ffmpeg-h3/cedrus264.c ffmpeg-cedurs/libavcodec/
 cp -R ffmpeg-h3/sunxi ffmpeg-cedurs/libavcodec/arm
 
-echo "check cross $1 $2"
+
 cd ffmpeg-cedurs 
+
+crs=$(find $1 -name "*gcc" | sed 's!.*/!!' | sed 's!gcc!!')
+
+echo "check cross $crs"
+
 ./configure \
-             --cross-prefix="$1" \
+             --cross-prefix="$crs" \
              --enable-cross-compile \
-             --arch=$2 \
+             --arch=arm \
              --target-os=linux \
              --enable-gpl \
              --enable-version3 \
@@ -16,5 +21,5 @@ cd ffmpeg-cedurs
              --disable-ffserver
 
 make -j32
-mkdir -p `pwd`/../../build
-make DESTDIR=`pwd`/../../build  install
+mkdir -p `pwd`/../../build-install
+make DESTDIR=`pwd`/../../build-install  install
