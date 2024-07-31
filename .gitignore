@@ -1,5 +1,6 @@
 /build/
 /build-install/
+/.vscode/
 .vscode-ctags
 
 # Prerequisites

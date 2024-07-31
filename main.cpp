@@ -32,6 +32,7 @@ int main(int argc, char const *argv[])
         .width = 1280,
         .height = 720,
         .framerate = 30,
+        .inputPixfmt = AV_PIX_FMT_NV12,
     };
 
     AVCodecInit(AVCTX, AVINF);

@@ -20,7 +20,7 @@ typedef struct TAVCodecInfo_t
     int framerate;
     // int gop_size;
     // int maxBFrame;
-    // int inputPixfmt; // FIXME: seems cedurs only accept NV12
+    AVPixelFormat inputPixfmt; // FIXME: seems cedurs only accept NV12
 } TAVCodecInfo;
 
 typedef struct TAVCodecCtx_t
@@ -54,7 +54,7 @@ inline int AVCodecInit(TAVCodecCtx *codecCtx,
 
     codecCtx->swsCtx = sws_getContext(codecInfo.width,
                                       codecInfo.height,
-                                      AV_PIX_FMT_NV12,
+                                      codecInfo.inputPixfmt,
                                       codecInfo.width,
                                       codecInfo.height,
                                       AV_PIX_FMT_NV12,
@@ -80,32 +80,42 @@ inline int AVCodecInit(TAVCodecCtx *codecCtx,
 inline AVPacket AVCodecPushFrame2(TAVCodecCtx *codecCtx, TAVCodecInfo codecInfo, uint8_t *frameData, int dataPreline)
 {
     // convert frame to AVFrame
-    // sws_scale(codecCtx->swsCtx, (const uint8_t *const *)frameData, &dataPreline, 0,
-    //   codecInfo.height, codecCtx->frame->data, codecCtx->frame->linesize);
 
-    int frame_size = codecInfo.width * codecInfo.height;
-    codecCtx->frame->data[0] = frameData;
-    codecCtx->frame->data[1] = frameData + frame_size;
+    if (codecInfo.inputPixfmt == AV_PIX_FMT_YUYV422)
+    {
+        int frame_size = codecInfo.width * codecInfo.height;
+        uint8_t *datain[3];
+        datain[0] = frameData;
+        datain[1] = frameData + frame_size;
+        datain[2] = frameData + frame_size * 5 / 4;
+        // FIXME: YUYV very slow, seem the dvp rate or cpu lag?
+        sws_scale(codecCtx->swsCtx, datain, &dataPreline, 0,
+                  codecInfo.height, codecCtx->frame->data, codecCtx->frame->linesize);
+    }
+    else if (codecInfo.inputPixfmt = AV_PIX_FMT_NV12)
+    {
+        int frame_size = codecInfo.width * codecInfo.height;
+        codecCtx->frame->data[0] = frameData;
+        codecCtx->frame->data[1] = frameData + frame_size;
+    }
+    else 
+    {
+        printf("[AVCODEC] unsupport fmt, only YUYV422 or NV12 support");
+        exit(1);
+    }
 
-    // int y_size = codecInfo.width * codecInfo.height;
-    // for (int i = 0; i < codecInfo.height; i++)
-    // {
-    //     memcpy(codecCtx->frame->data[0] + i * codecCtx->frame->linesize[0], frameData + i * codecInfo.width, codecInfo.width);
-    // }
-
-    // // Copy the interleaved UV plane
-    // int uv_height = codecInfo.height / 2;
-    // for (int i = 0; i < uv_height; i++)
-    // {
-    //     memcpy(codecCtx->frame->data[1] + i * codecCtx->frame->linesize[1], frameData + y_size + i * codecInfo.height, codecInfo.height);
-    // }
+    av_packet_unref(&codecCtx->pkt);
+    av_init_packet(&codecCtx->pkt);
+    codecCtx->pkt.data = NULL;
+    codecCtx->pkt.size = 0;
 
     avcodec_encode_video2(codecCtx->c,
                           &codecCtx->pkt,
                           codecCtx->frame,
                           &codecCtx->got_output);
     while (!&codecCtx->got_output)
-        ;
+        usleep(1000);
+
     printf("Write frame size=%d\n", codecCtx->pkt.size);
 
     return codecCtx->pkt;
