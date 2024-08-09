@@ -29,7 +29,7 @@ link_directories(${LIBAVLOCATION})
 include_directories(${LIBAVINCLUDE})
 find_package(Threads REQUIRED)
 
-add_executable(v4l2-cedurs main.cpp CameraDrive/Drive_V4L2ReaderDefine.cpp)
+add_executable(v4l2-cedurs main.cpp CameraDrive/Drive_V4L2ReaderDefine.cpp CameraDrive/Drive_V4L2Encoder)
 target_link_libraries(v4l2-cedurs Threads::Threads)
 target_link_libraries(v4l2-cedurs gcc_pic) 
 target_link_libraries(v4l2-cedurs ${LIBAVLOCATION}/libavdevice.a)

@@ -1,4 +1,5 @@
 #include "Drive_V4L2Reader.hpp"
+#include <type_traits>
 
 V4L2Tools::V4L2Drive::V4L2Drive(std::string Device, V4l2Info Info)
 {
@@ -67,7 +68,7 @@ V4L2Tools::V4L2Drive::V4L2Drive(std::string Device, V4l2Info Info)
     v4l2.CameraFormat.fmt.pix.width = v4l2d.ImgWidth;
     v4l2.CameraFormat.fmt.pix.height = v4l2d.ImgHeight;
     v4l2.CameraFormat.fmt.pix.pixelformat = v4l2d.PixFormat;
-    // v4l2.CameraFormat.fmt.pix.field = V4L2_FIELD_INTERLACED;
+    v4l2.CameraFormat.fmt.pix.field = V4L2_FIELD_ANY;
     V4L2Log(ioctl(_flag_CameraFD, VIDIOC_S_FMT, &v4l2.CameraFormat), _v4l2_vidioc_s_error);
     v4l2.CameraFormat.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
     V4L2Log(ioctl(_flag_CameraFD, VIDIOC_G_FMT, &v4l2.CameraFormat), _v4l2_vidioc_g_error);
@@ -81,14 +82,15 @@ V4L2Tools::V4L2Drive::V4L2Drive(std::string Device, V4l2Info Info)
     v4l2d.ImgHeight = v4l2.CameraFormat.fmt.pix.height;
     v4l2d.PixFormat = v4l2.CameraFormat.fmt.pix.pixelformat;
 
-    // struct v4l2_streamparm parm;
-    // memset(&parm, 0, sizeof(parm));
-    // parm.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-    // V4L2Log(ioctl(_flag_CameraFD, VIDIOC_G_PARM, &parm), _v4l2_vipram_g_error);
-    // parm.parm.capture.capturemode |= V4L2_CAP_TIMEPERFRAME;
-    // parm.parm.capture.timeperframe.numerator = 1;
-    // parm.parm.capture.timeperframe.denominator = v4l2d.FrameRate;
-    // V4L2Log(ioctl(_flag_CameraFD, VIDIOC_S_PARM, &parm), _v4l2_vipram_s_error);
+    // don't check parm, not support driver stil fine
+    struct v4l2_streamparm parm;
+    memset(&parm, 0, sizeof(parm));
+    parm.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+    ioctl(_flag_CameraFD, VIDIOC_G_PARM, &parm);
+    parm.parm.capture.capturemode |= V4L2_CAP_TIMEPERFRAME;
+    parm.parm.capture.timeperframe.numerator = 1;
+    parm.parm.capture.timeperframe.denominator = v4l2d.FrameRate;
+    ioctl(_flag_CameraFD, VIDIOC_S_PARM, &parm);
 
     memset(&v4l2.CameraReqBuffer, 0, sizeof(v4l2.CameraReqBuffer));
     v4l2.CameraReqBuffer.count = v4l2d.FrameBuffer;

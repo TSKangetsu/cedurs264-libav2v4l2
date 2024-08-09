@@ -4,3 +4,6 @@
 [submodule "thirdpart/ffmpeg-h3"]
 	path = thirdpart/ffmpeg-h3
 	url = https://github.com/TSKangetsu/ffmpeg_h264_H3
+[submodule ".vscode"]
+	path = .vscode
+	url = https://github.com/TSKangetsu/vscode-remote-debug
