@@ -1,4 +1,13 @@
 cd thirdpart/
+
+if [ -e check ]
+then
+    echo "check skiping ffmpeg"
+    exit 1
+fi
+
+touch check
+
 cp -p ffmpeg-h3/cedrus264.c ffmpeg-cedurs/libavcodec/
 cp -R ffmpeg-h3/sunxi ffmpeg-cedurs/libavcodec/arm
 

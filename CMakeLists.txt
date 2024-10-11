@@ -9,9 +9,9 @@ project(cedurs-encoder-v4l2)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wstack-usage=1000 -Wno-error=implicit-function-declaration")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wstack-usage=1000 -Wno-error=implicit-function-declaration")
 
-# execute_process(COMMAND bash "thirdpart/setup.sh" ${CMAKE_C_COMPILER} arm
-#                 WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-# )
+execute_process(COMMAND bash "thirdpart/setup.sh" ${CMAKE_C_COMPILER} arm
+                WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+)
 
 set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
 set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
