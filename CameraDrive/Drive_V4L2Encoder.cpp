@@ -80,7 +80,7 @@ V4L2Tools::V4L2Encoder::V4L2Encoder(std::string Device, V4l2Info Info, bool isge
             v4l2.CameraFormatOut.fmt.pix.field = V4L2_FIELD_ANY;
         }
 
-        // V4L2Log(ioctl(_flag_CameraFD, VIDIOC_S_FMT, &v4l2.CameraFormat), _v4l2_vidioc_s_error);
+        V4L2Log(ioctl(_flag_CameraFD, VIDIOC_S_FMT, &v4l2.CameraFormat), _v4l2_vidioc_s_error);
         V4L2Log(ioctl(_flag_CameraFD, VIDIOC_S_FMT, &v4l2.CameraFormatOut), 10 + _v4l2_vidioc_s_error);
     }
 
@@ -98,56 +98,97 @@ V4L2Tools::V4L2Encoder::V4L2Encoder(std::string Device, V4l2Info Info, bool isge
     v4l2.CameraReqBuffer.type = isMPlaneSupported ? V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE : V4L2_BUF_TYPE_VIDEO_OUTPUT;
     V4L2Log(ioctl(_flag_CameraFD, VIDIOC_REQBUFS, &v4l2.CameraReqBuffer), _v4l2_reqbuff_error);
     v4l2Buffers = (void **)calloc(v4l2.CameraReqBuffer.count, sizeof(*v4l2Buffers));
-    for (int Index = 0; Index < v4l2.CameraReqBuffer.count; ++Index)
-    {
-        v4l2_plane plane;
-        memset(&plane, 0, sizeof(plane));
-        memset(&v4l2.CameraQBuffer, 0, sizeof(v4l2.CameraQBuffer));
-        v4l2.CameraQBuffer.type = isMPlaneSupported ? V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE : V4L2_BUF_TYPE_VIDEO_OUTPUT;
-        v4l2.CameraQBuffer.memory = V4L2_MEMORY_MMAP;
-        v4l2.CameraQBuffer.index = Index;
-        v4l2.CameraQBuffer.length = isMPlaneSupported ? 1 : v4l2.CameraQBuffer.length;
-        v4l2.CameraQBuffer.m.planes = &plane;
-        V4L2Log(ioctl(_flag_CameraFD, VIDIOC_QUERYBUF, &v4l2.CameraQBuffer), _v4l2_querybuff_error);
-        v4l2Buffers[Index] = mmap(NULL, isMPlaneSupported ? plane.length : v4l2.CameraQBuffer.length,
-                                  PROT_READ | PROT_WRITE, MAP_SHARED, _flag_CameraFD, plane.m.mem_offset);
-        if (MAP_FAILED == v4l2Buffers[Index])
-        {
-#ifdef DEBUG
-            std::cout << "  Mapping ERROR"
-                      << "\n";
-#endif
-        }
-        V4L2Log(ioctl(_flag_CameraFD, VIDIOC_QBUF, &v4l2.CameraQBuffer), _v4l2_qbuf_error);
-    }
-    //=========================================================================================//
+
     memset(&v4l2.CameraReqBufferOut, 0, sizeof(v4l2.CameraReqBufferOut));
     v4l2.CameraReqBufferOut.count = v4l2d.FrameBuffer;
     v4l2.CameraReqBufferOut.memory = V4L2_MEMORY_MMAP;
     v4l2.CameraReqBufferOut.type = isMPlaneSupported ? V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE : V4L2_BUF_TYPE_VIDEO_CAPTURE;
     V4L2Log(ioctl(_flag_CameraFD, VIDIOC_REQBUFS, &v4l2.CameraReqBufferOut), 10 + _v4l2_reqbuff_error);
     v4l2BuffersOut = (void **)calloc(v4l2.CameraReqBufferOut.count, sizeof(*v4l2BuffersOut));
-    for (int Index = 0; Index < v4l2.CameraReqBufferOut.count; ++Index)
+
+    if (isMPlaneSupported)
     {
-        v4l2_plane plane;
-        memset(&plane, 0, sizeof(plane));
-        memset(&v4l2.CameraQBufferOut, 0, sizeof(v4l2.CameraQBufferOut));
-        v4l2.CameraQBufferOut.type = isMPlaneSupported ? V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE : V4L2_BUF_TYPE_VIDEO_CAPTURE;
-        v4l2.CameraQBufferOut.memory = V4L2_MEMORY_MMAP;
-        v4l2.CameraQBufferOut.index = Index;
-        v4l2.CameraQBufferOut.length = isMPlaneSupported ? 1 : v4l2.CameraQBufferOut.length;
-        v4l2.CameraQBufferOut.m.planes = &plane;
-        V4L2Log(ioctl(_flag_CameraFD, VIDIOC_QUERYBUF, &v4l2.CameraQBufferOut), 10 + _v4l2_querybuff_error);
-        v4l2BuffersOut[Index] = mmap(NULL, isMPlaneSupported ? plane.length : v4l2.CameraQBufferOut.length,
-                                     PROT_READ | PROT_WRITE, MAP_SHARED, _flag_CameraFD, plane.m.mem_offset);
-        if (MAP_FAILED == v4l2BuffersOut[Index])
+        for (int Index = 0; Index < v4l2.CameraReqBuffer.count; ++Index)
         {
+            v4l2_plane plane;
+            memset(&plane, 0, sizeof(plane));
+            memset(&v4l2.CameraQBuffer, 0, sizeof(v4l2.CameraQBuffer));
+            v4l2.CameraQBuffer.type = V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE;
+            v4l2.CameraQBuffer.memory = V4L2_MEMORY_MMAP;
+            v4l2.CameraQBuffer.index = Index;
+            v4l2.CameraQBuffer.length = 1;
+            v4l2.CameraQBuffer.m.planes = &plane;
+            V4L2Log(ioctl(_flag_CameraFD, VIDIOC_QUERYBUF, &v4l2.CameraQBuffer), _v4l2_querybuff_error);
+            v4l2Buffers[Index] = mmap(NULL, plane.length,
+                                      PROT_READ | PROT_WRITE, MAP_SHARED, _flag_CameraFD, plane.m.mem_offset);
+            if (MAP_FAILED == v4l2Buffers[Index])
+            {
 #ifdef DEBUG
-            std::cout << "  Mapping ERROR"
-                      << "\n";
+                std::cout << "  Mapping ERROR"
+                          << "\n";
 #endif
+            }
+            V4L2Log(ioctl(_flag_CameraFD, VIDIOC_QBUF, &v4l2.CameraQBuffer), _v4l2_qbuf_error);
         }
-        V4L2Log(ioctl(_flag_CameraFD, VIDIOC_QBUF, &v4l2.CameraQBufferOut), 10 + _v4l2_qbuf_error);
+
+        for (int Index = 0; Index < v4l2.CameraReqBufferOut.count; ++Index)
+        {
+            v4l2_plane plane;
+            memset(&plane, 0, sizeof(plane));
+            memset(&v4l2.CameraQBufferOut, 0, sizeof(v4l2.CameraQBufferOut));
+            v4l2.CameraQBufferOut.type = V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE;
+            v4l2.CameraQBufferOut.memory = V4L2_MEMORY_MMAP;
+            v4l2.CameraQBufferOut.index = Index;
+            v4l2.CameraQBufferOut.length = 1;
+            v4l2.CameraQBufferOut.m.planes = &plane;
+            V4L2Log(ioctl(_flag_CameraFD, VIDIOC_QUERYBUF, &v4l2.CameraQBufferOut), 10 + _v4l2_querybuff_error);
+            v4l2BuffersOut[Index] = mmap(NULL, plane.length,
+                                         PROT_READ | PROT_WRITE, MAP_SHARED, _flag_CameraFD, plane.m.mem_offset);
+            if (MAP_FAILED == v4l2BuffersOut[Index])
+            {
+#ifdef DEBUG
+                std::cout << "  Mapping ERROR"
+                          << "\n";
+#endif
+            }
+            V4L2Log(ioctl(_flag_CameraFD, VIDIOC_QBUF, &v4l2.CameraQBufferOut), 10 + _v4l2_qbuf_error);
+        }
+    }
+    else
+    {
+        for (int Index = 0; Index < v4l2.CameraReqBuffer.count; ++Index)
+        {
+            memset(&v4l2.CameraQBuffer, 0, sizeof(v4l2.CameraQBuffer));
+            v4l2.CameraQBuffer.type = V4L2_BUF_TYPE_VIDEO_OUTPUT;
+            v4l2.CameraQBuffer.memory = V4L2_MEMORY_MMAP;
+            v4l2.CameraQBuffer.index = Index;
+            V4L2Log(ioctl(_flag_CameraFD, VIDIOC_QUERYBUF, &v4l2.CameraQBuffer), _v4l2_querybuff_error);
+            v4l2Buffers[Index] = mmap(NULL, v4l2.CameraQBuffer.length, PROT_READ | PROT_WRITE, MAP_SHARED, _flag_CameraFD, v4l2.CameraQBuffer.m.offset);
+            if (MAP_FAILED == v4l2Buffers[Index])
+            {
+#ifdef DEBUG
+                std::cout << "  Mapping ERROR"
+                          << "\n";
+#endif
+            }
+        }
+
+        for (int Index = 0; Index < v4l2.CameraReqBufferOut.count; ++Index)
+        {
+            memset(&v4l2.CameraQBufferOut, 0, sizeof(v4l2.CameraQBufferOut));
+            v4l2.CameraQBufferOut.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+            v4l2.CameraQBufferOut.memory = V4L2_MEMORY_MMAP;
+            v4l2.CameraQBufferOut.index = Index;
+            V4L2Log(ioctl(_flag_CameraFD, VIDIOC_QUERYBUF, &v4l2.CameraQBufferOut), _v4l2_querybuff_error);
+            v4l2BuffersOut[Index] = mmap(NULL, v4l2.CameraQBufferOut.length, PROT_READ | PROT_WRITE, MAP_SHARED, _flag_CameraFD, v4l2.CameraQBufferOut.m.offset);
+            if (MAP_FAILED == v4l2BuffersOut[Index])
+            {
+#ifdef DEBUG
+                std::cout << "  Mapping ERROR"
+                          << "\n";
+#endif
+            }
+        }
     }
     //=========================================================================================//
 
@@ -180,6 +221,7 @@ V4L2Tools::V4L2Encoder::V4L2Encoder(std::string Device, V4l2Info Info, bool isge
 
 void V4L2Tools::V4L2Encoder::V4L2EncodeSet(V4L2Tools::V4l2Data &VdataIn, V4L2Tools::V4l2Data &VdataOut)
 {
+retry:
     unsigned int size = 0;
     if (VdataIn.size <= 0)
         VdataIn = V4L2Tools::V4l2Data(
@@ -190,7 +232,8 @@ void V4L2Tools::V4L2Encoder::V4L2EncodeSet(V4L2Tools::V4l2Data &VdataIn, V4L2Too
             v4l2d.PixFormat,
             v4l2.CameraFormat.fmt.pix.bytesperline);
 
-    ioctl(_flag_CameraFD, VIDIOC_DQBUF, &v4l2.CameraBuffer);
+    if (ioctl(_flag_CameraFD, VIDIOC_DQBUF, &v4l2.CameraBuffer) == 11)
+        goto retry;
 
     std::copy(VdataIn.data,
               VdataIn.data + VdataIn.size,
@@ -200,26 +243,29 @@ void V4L2Tools::V4L2Encoder::V4L2EncodeSet(V4L2Tools::V4l2Data &VdataIn, V4L2Too
         v4l2.CameraBuffer.m.planes->length = VdataIn.size;
     else
         v4l2.CameraBuffer.length = VdataIn.size;
-    ioctl(_flag_CameraFD, VIDIOC_QBUF, &v4l2.CameraBuffer);
+    V4L2Log(ioctl(_flag_CameraFD, VIDIOC_QBUF, &v4l2.CameraBuffer), 20 + _v4l2_camread_error);
     //=========================================================================================//
+
+retry2:
     if (VdataOut.size <= 0)
         VdataOut = V4L2Tools::V4l2Data(
             v4l2d.ImgWidth,
             v4l2d.ImgHeight,
-            isMPlaneSupported ? v4l2.CameraQBuffer.m.planes->length : v4l2.CameraQBuffer.length,
-            isMPlaneSupported ? v4l2.CameraQBuffer.m.planes->length : v4l2.CameraQBuffer.length,
-            v4l2d.PixFormat,
-            v4l2.CameraFormat.fmt.pix.bytesperline);
+            isMPlaneSupported ? v4l2.CameraQBufferOut.m.planes->length : v4l2.CameraQBufferOut.length,
+            isMPlaneSupported ? v4l2.CameraQBufferOut.m.planes->length : v4l2.CameraQBufferOut.length,
+            v4l2d.PixFormatOut,
+            v4l2.CameraFormatOut.fmt.pix.bytesperline);
 
     fd_set fds;
     struct timeval tv;
     int r;
     FD_ZERO(&fds);
     FD_SET(_flag_CameraFD, &fds);
-    tv.tv_sec = 10; // TODO: fix loop logic
+    tv.tv_sec = 1; // TODO: fix loop logic
     tv.tv_usec = 0;
     r = select(_flag_CameraFD + 1, &fds, NULL, NULL, &tv);
-    ioctl(_flag_CameraFD, VIDIOC_DQBUF, &v4l2.CameraBufferOut);
+    if (ioctl(_flag_CameraFD, VIDIOC_DQBUF, &v4l2.CameraBufferOut) == 11)
+        goto retry2;
     VdataOut.bytesperline = v4l2.CameraFormatOut.fmt.pix.bytesperline;
     if (isMPlaneSupported)
         VdataOut.size = v4l2.CameraBufferOut.m.planes->bytesused;
@@ -228,5 +274,5 @@ void V4L2Tools::V4L2Encoder::V4L2EncodeSet(V4L2Tools::V4l2Data &VdataIn, V4L2Too
     std::copy((unsigned char *)v4l2BuffersOut[v4l2.CameraBufferOut.index],
               (unsigned char *)v4l2BuffersOut[v4l2.CameraBufferOut.index] + VdataOut.size,
               VdataOut.data);
-    ioctl(_flag_CameraFD, VIDIOC_QBUF, &v4l2.CameraBufferOut);
+    V4L2Log(ioctl(_flag_CameraFD, VIDIOC_QBUF, &v4l2.CameraBufferOut), 40 + _v4l2_camread_error);
 }

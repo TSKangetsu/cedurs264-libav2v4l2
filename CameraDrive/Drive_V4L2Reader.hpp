@@ -168,6 +168,17 @@ namespace V4L2Tools
         template <typename T = bool>
         void V4L2Read(V4L2Tools::V4l2Data &Vdata) { static_assert(fail<T>::value, "don't use it in M2M"); }
 
+        inline V4l2Data V4l2DataGetOut()
+        {
+            return V4L2Tools::V4l2Data(
+                v4l2d.ImgWidth,
+                v4l2d.ImgHeight,
+                isMPlaneSupported ? v4l2.CameraQBufferOut.m.planes->length : v4l2.CameraQBufferOut.length,
+                isMPlaneSupported ? v4l2.CameraQBufferOut.m.planes->length : v4l2.CameraQBufferOut.length,
+                v4l2d.PixFormatOut,
+                v4l2.CameraFormatOut.fmt.pix.bytesperline);
+        }
+
         ~V4L2Encoder() {};
 
     private:
