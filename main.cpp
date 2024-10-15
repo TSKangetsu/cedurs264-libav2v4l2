@@ -73,9 +73,16 @@ int main(int argc, char const *argv[])
     {
         v4l.V4L2Read(data);
         //
-        v4le.V4L2EncodeSet(data, dataOut);
-        usleep(10 * 1000);
-        v4leOut.V4L2EncodeSet(datain2, dataOut2);
+        try
+        {
+            v4le.V4L2EncodeSet(data, dataOut);
+            v4leOut.V4L2EncodeSet(datain2, dataOut2);
+        }
+        catch (int e)
+        {
+            //
+        }
+
         pkt = AVCodecPushFrame2(AVCTX, AVINF, dataOut2.data, dataOut2.bytesperline);
         fwrite(pkt.data, 1, pkt.size, f);
     }

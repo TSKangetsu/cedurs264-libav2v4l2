@@ -173,7 +173,6 @@ void V4L2Tools::V4L2Drive::V4L2Read(V4L2Tools::V4l2Data &Vdata)
     }
     else
     {
-        std::cout << "stuck to die here\n";
     }
 }
 

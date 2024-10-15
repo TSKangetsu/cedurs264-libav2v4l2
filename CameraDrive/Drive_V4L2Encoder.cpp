@@ -171,6 +171,7 @@ V4L2Tools::V4L2Encoder::V4L2Encoder(std::string Device, V4l2Info Info, bool isge
                           << "\n";
 #endif
             }
+            V4L2Log(ioctl(_flag_CameraFD, VIDIOC_QBUF, &v4l2.CameraQBuffer), _v4l2_qbuf_error);
         }
 
         for (int Index = 0; Index < v4l2.CameraReqBufferOut.count; ++Index)
@@ -188,6 +189,7 @@ V4L2Tools::V4L2Encoder::V4L2Encoder(std::string Device, V4l2Info Info, bool isge
                           << "\n";
 #endif
             }
+            V4L2Log(ioctl(_flag_CameraFD, VIDIOC_QBUF, &v4l2.CameraQBufferOut), 10 + _v4l2_qbuf_error);
         }
     }
     //=========================================================================================//
@@ -222,7 +224,6 @@ V4L2Tools::V4L2Encoder::V4L2Encoder(std::string Device, V4l2Info Info, bool isge
 void V4L2Tools::V4L2Encoder::V4L2EncodeSet(V4L2Tools::V4l2Data &VdataIn, V4L2Tools::V4l2Data &VdataOut)
 {
 retry:
-    unsigned int size = 0;
     if (VdataIn.size <= 0)
         VdataIn = V4L2Tools::V4l2Data(
             v4l2d.ImgWidth,
