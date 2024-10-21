@@ -47,8 +47,8 @@ V4L2Tools::V4L2Encoder::V4L2Encoder(std::string Device, V4l2Info Info, bool isge
             else
                 throw std::invalid_argument("not a 2in-out m2m device");
         }
-        // try MPLANE
 
+        // try MPLANE
         if (isMPlaneSupported)
         {
             v4l2.CameraFormat.type = V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE;
@@ -234,7 +234,10 @@ retry:
             v4l2.CameraFormat.fmt.pix.bytesperline);
 
     if (ioctl(_flag_CameraFD, VIDIOC_DQBUF, &v4l2.CameraBuffer) == 11)
+    {
+        usleep(10 * 1000); // FIXME: AVOID EXPLORTION
         goto retry;
+    }
 
     std::copy(VdataIn.data,
               VdataIn.data + VdataIn.size,
@@ -247,7 +250,7 @@ retry:
         v4l2.CameraBuffer.length = VdataIn.maxsize;
         v4l2.CameraBuffer.bytesused = VdataIn.size;
     }
-    V4L2Log(ioctl(_flag_CameraFD, VIDIOC_QBUF, &v4l2.CameraBuffer), 20 + _v4l2_camread_error);
+    ioctl(_flag_CameraFD, VIDIOC_QBUF, &v4l2.CameraBuffer);
     //=========================================================================================//
 
 retry2:
@@ -269,7 +272,10 @@ retry2:
     tv.tv_usec = 0;
     r = select(_flag_CameraFD + 1, &fds, NULL, NULL, &tv);
     if (ioctl(_flag_CameraFD, VIDIOC_DQBUF, &v4l2.CameraBufferOut) == 11)
+    {
+        usleep(10 * 1000); // FIXME: AVOID EXPLORTION
         goto retry2;
+    }
     VdataOut.bytesperline = v4l2.CameraFormatOut.fmt.pix.bytesperline;
     if (isMPlaneSupported)
         VdataOut.size = v4l2.CameraBufferOut.m.planes->bytesused;
@@ -278,5 +284,5 @@ retry2:
     std::copy((unsigned char *)v4l2BuffersOut[v4l2.CameraBufferOut.index],
               (unsigned char *)v4l2BuffersOut[v4l2.CameraBufferOut.index] + VdataOut.size,
               VdataOut.data);
-    V4L2Log(ioctl(_flag_CameraFD, VIDIOC_QBUF, &v4l2.CameraBufferOut), 40 + _v4l2_camread_error);
+    ioctl(_flag_CameraFD, VIDIOC_QBUF, &v4l2.CameraBufferOut);
 }
