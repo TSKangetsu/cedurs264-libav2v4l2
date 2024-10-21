@@ -241,9 +241,12 @@ retry:
               (unsigned char *)v4l2Buffers[v4l2.CameraBuffer.index]);
 
     if (isMPlaneSupported)
-        v4l2.CameraBuffer.m.planes->length = VdataIn.size;
+        v4l2.CameraBuffer.m.planes->length = VdataIn.maxsize;
     else
-        v4l2.CameraBuffer.length = VdataIn.size;
+    {
+        v4l2.CameraBuffer.length = VdataIn.maxsize;
+        v4l2.CameraBuffer.bytesused = VdataIn.size;
+    }
     V4L2Log(ioctl(_flag_CameraFD, VIDIOC_QBUF, &v4l2.CameraBuffer), 20 + _v4l2_camread_error);
     //=========================================================================================//
 
@@ -271,7 +274,7 @@ retry2:
     if (isMPlaneSupported)
         VdataOut.size = v4l2.CameraBufferOut.m.planes->bytesused;
     else
-        v4l2.CameraBuffer.length = v4l2.CameraBufferOut.bytesused;
+        VdataOut.size = v4l2.CameraBufferOut.bytesused;
     std::copy((unsigned char *)v4l2BuffersOut[v4l2.CameraBufferOut.index],
               (unsigned char *)v4l2BuffersOut[v4l2.CameraBufferOut.index] + VdataOut.size,
               VdataOut.data);

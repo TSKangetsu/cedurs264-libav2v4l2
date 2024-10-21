@@ -116,7 +116,7 @@ inline AVPacket AVCodecPushFrame2(TAVCodecCtx *codecCtx, TAVCodecInfo codecInfo,
     while (!&codecCtx->got_output)
         usleep(1000);
 
-    printf("Write frame size=%d\n", codecCtx->pkt.size);
+    // printf("Write frame size=%d\n", codecCtx->pkt.size);
 
     return codecCtx->pkt;
 };

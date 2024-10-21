@@ -77,14 +77,17 @@ int main(int argc, char const *argv[])
         {
             v4le.V4L2EncodeSet(data, dataOut);
             v4leOut.V4L2EncodeSet(datain2, dataOut2);
+            pkt = AVCodecPushFrame2(AVCTX, AVINF, dataOut2.data, dataOut2.bytesperline);
+            std::copy(pkt.data, pkt.data + pkt.size, datain2.data);
+            datain2.size = pkt.size;
+            std::cout << "check size:" << dataOut.size << "\n";
         }
         catch (int e)
         {
             //
         }
 
-        pkt = AVCodecPushFrame2(AVCTX, AVINF, dataOut2.data, dataOut2.bytesperline);
-        fwrite(pkt.data, 1, pkt.size, f);
+        fwrite(dataOut.data, 1, dataOut.size, f);
     }
 
     fwrite(endcode, 1, sizeof(endcode), f);
