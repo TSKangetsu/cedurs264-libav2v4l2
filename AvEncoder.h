@@ -1,11 +1,5 @@
 #include <libavcodec/avcodec.h>
-#include <libavutil/opt.h>
-#include <libavcodec/avcodec.h>
-#include <libavutil/channel_layout.h>
-#include <libavutil/common.h>
 #include <libavutil/imgutils.h>
-#include <libavutil/mathematics.h>
-#include <libavutil/samplefmt.h>
 #include <libswscale/swscale.h>
 #include <unistd.h>
 
@@ -15,6 +9,7 @@ typedef struct TAVCodecInfo_t
 {
     // int codec_id;
     // int bitrate;
+    char *qp;
     int width;
     int height;
     int framerate;
@@ -49,7 +44,7 @@ inline int AVCodecInit(TAVCodecCtx *codecCtx,
     codecCtx->c->height = codecInfo.height;
     codecCtx->c->pix_fmt = AV_PIX_FMT_NV12;
     AVDictionary *TmpCodecOptions = nullptr;
-    av_dict_set(&TmpCodecOptions, "qp", "35", 0);
+    av_dict_set(&TmpCodecOptions, "qp", codecInfo.qp, 0);
     avcodec_open2(codecCtx->c, codecCtx->codec, &TmpCodecOptions);
 
     codecCtx->swsCtx = sws_getContext(codecInfo.width,
@@ -80,7 +75,6 @@ inline int AVCodecInit(TAVCodecCtx *codecCtx,
 inline AVPacket AVCodecPushFrame2(TAVCodecCtx *codecCtx, TAVCodecInfo codecInfo, uint8_t *frameData, int dataPreline)
 {
     // convert frame to AVFrame
-
     if (codecInfo.inputPixfmt == AV_PIX_FMT_YUYV422)
     {
         int frame_size = codecInfo.width * codecInfo.height;
@@ -98,7 +92,7 @@ inline AVPacket AVCodecPushFrame2(TAVCodecCtx *codecCtx, TAVCodecInfo codecInfo,
         codecCtx->frame->data[0] = frameData;
         codecCtx->frame->data[1] = frameData + frame_size;
     }
-    else 
+    else
     {
         printf("[AVCODEC] unsupport fmt, only YUYV422 or NV12 support");
         exit(1);

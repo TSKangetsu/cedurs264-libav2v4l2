@@ -6,8 +6,8 @@ set(THREADS_PREFER_PTHREAD_FLAG ON)
 
 project(cedurs-encoder-v4l2)
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wstack-usage=1000 -Wno-error=implicit-function-declaration")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wstack-usage=1000 -Wno-error=implicit-function-declaration")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Os -s -Wstack-usage=1000 -Wno-error=implicit-function-declaration")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Os -s -Wstack-usage=1000 -Wno-error=implicit-function-declaration")
 
 execute_process(COMMAND bash "thirdpart/setup.sh" ${CMAKE_C_COMPILER} arm
                 WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
@@ -32,9 +32,9 @@ find_package(Threads REQUIRED)
 add_executable(v4l2-cedurs main.cpp CameraDrive/Drive_V4L2ReaderDefine.cpp CameraDrive/Drive_V4L2Encoder)
 target_link_libraries(v4l2-cedurs Threads::Threads)
 target_link_libraries(v4l2-cedurs gcc_pic) 
-target_link_libraries(v4l2-cedurs ${LIBAVLOCATION}/libavdevice.a)
-target_link_libraries(v4l2-cedurs ${LIBAVLOCATION}/libavfilter.a)
-target_link_libraries(v4l2-cedurs ${LIBAVLOCATION}/libavformat.a)
+# target_link_libraries(v4l2-cedurs ${LIBAVLOCATION}/libavdevice.a)
+# target_link_libraries(v4l2-cedurs ${LIBAVLOCATION}/libavfilter.a)
+# target_link_libraries(v4l2-cedurs ${LIBAVLOCATION}/libavformat.a)
 target_link_libraries(v4l2-cedurs ${LIBAVLOCATION}/libavcodec.a)
 target_link_libraries(v4l2-cedurs ${LIBAVLOCATION}/libswresample.a)
 target_link_libraries(v4l2-cedurs ${LIBAVLOCATION}/libswscale.a)
