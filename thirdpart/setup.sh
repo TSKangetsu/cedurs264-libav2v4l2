@@ -23,11 +23,13 @@ echo "check cross $crs"
              --enable-cross-compile \
              --arch=arm \
              --target-os=linux \
+             --disable-runtime-cpudetect \
+             --enable-pthreads \
              --enable-gpl \
              --enable-version3 \
-             --disable-ffplay \
-             --disable-ffprobe \
-             --disable-ffserver
+             --disable-programs \
+             --enable-ffmpeg \
+             --enable-small
 
 make -j32
 mkdir -p `pwd`/../../build-install
