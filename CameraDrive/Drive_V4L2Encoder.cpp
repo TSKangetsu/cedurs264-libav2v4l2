@@ -268,7 +268,7 @@ retry2:
     tv.tv_sec = 1; // TODO: fix loop logic
     tv.tv_usec = 0;
     r = select(_flag_CameraFD + 1, &fds, NULL, NULL, &tv);
-    // time out just skip
+
     ioctl(_flag_CameraFD, VIDIOC_DQBUF, &v4l2.CameraBufferOut);
 
     VdataOut.bytesperline = v4l2.CameraFormatOut.fmt.pix.bytesperline;
