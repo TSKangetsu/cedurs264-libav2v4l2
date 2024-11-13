@@ -26,6 +26,7 @@ echo "check cross $crs"
              --disable-runtime-cpudetect \
              --enable-pthreads \
              --enable-gpl \
+             --disable-zlib \
              --enable-version3 \
              --disable-programs \
              --enable-ffmpeg \
