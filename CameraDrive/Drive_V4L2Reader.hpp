@@ -42,7 +42,7 @@ namespace V4L2Tools
         int maxsize;
         unsigned int size;
         unsigned int pixfmt;
-        std::shared_ptr<unsigned char> data;
+        unsigned char *data;
         unsigned int bytesperline;
         //
         V4l2Data() : width(0), height(0), maxsize(0), size(0), pixfmt(0), data(nullptr), bytesperline(0) {};
@@ -58,7 +58,6 @@ namespace V4L2Tools
             this->size = size;
             this->maxsize = maxsize;
             this->pixfmt = pixfmt;
-            this->data.reset(new unsigned char[this->size]);
             this->bytesperline = bytesperline;
 
 #ifdef DEBUG
@@ -71,22 +70,15 @@ namespace V4L2Tools
             height = DataCpy.height;
             maxsize = DataCpy.maxsize;
             pixfmt = DataCpy.pixfmt;
-            if (size <= 0)
-            {
-                size = DataCpy.size;
-                data.reset(new unsigned char[size]);
-            }
-            else
-            {
-                size = DataCpy.size;
-                std::copy(DataCpy.data.get(), DataCpy.data.get() + size, this->data.get());
-            }
+            size = DataCpy.size;
+            this->data = DataCpy.data;
             bytesperline = DataCpy.bytesperline;
             return *this;
         };
 
         V4l2Data(const V4l2Data &DataCpy)
         {
+            // FIXME: check here has risk may seg
             width = DataCpy.width;
             height = DataCpy.height;
             size = DataCpy.size;
@@ -96,10 +88,7 @@ namespace V4L2Tools
             bytesperline = DataCpy.bytesperline;
         };
 
-        ~V4l2Data()
-        {
-            data.reset();
-        };
+        ~V4l2Data() {};
     };
 
     enum V4L2Error
