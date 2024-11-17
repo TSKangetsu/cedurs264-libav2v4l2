@@ -98,6 +98,8 @@ inline AVPacket AVCodecPushFrame2(TAVCodecCtx *codecCtx, TAVCodecInfo codecInfo,
         exit(1);
     }
 
+    av_packet_unref(&codecCtx->pkt);
+    av_init_packet(&codecCtx->pkt);
     codecCtx->pkt.data = NULL;
     codecCtx->pkt.size = 0;
 
