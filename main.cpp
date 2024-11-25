@@ -42,13 +42,16 @@ int main(int argc, char const *argv[])
             [&]
             {
                 v4leOut.V4L2EncodeSet(datain2, dataOut2);
-                pkt = AVCodecPushFrame2(AVCTX, AVINF, dataOut2.data, dataOut2.bytesperline);
-                std::copy(pkt.data, pkt.data + pkt.size, datain2.data);
-                datain2.size = pkt.size;
+                if (dataOut2.size != 0)
+                {
+                    pkt = AVCodecPushFrame2(AVCTX, AVINF, dataOut2.data, dataOut2.bytesperline);
+                    std::copy(pkt.data, pkt.data + pkt.size, datain2.data);
+                    datain2.size = pkt.size;
+                }
 
                 // std::cout << thread.TimeDT << " " << datain2.size << " " << dataOut2.size << "\n\n";
             },
-            (float)std::atoi(argv[3]));
+            (float)std::atoi(argv[4]));
 
         thread.join();
     }
