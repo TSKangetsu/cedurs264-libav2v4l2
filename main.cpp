@@ -3,16 +3,27 @@ extern "C"
 #include "AvEncoder.h"
 }
 
+#include <csignal>
 #include <thread>
 #include "FlowController.hpp"
 #include "CameraDrive/Drive_V4L2Reader.hpp"
 
 using namespace V4L2Tools;
+FILE *f;
+FlowThread *threadss;
 
 int main(int argc, char const *argv[])
 {
     if (argc >= 6) // dev width height fps qp
     {
+        std::signal(SIGINT, [](int sig) -> void
+                    {
+                        threadss->FlowStopAndWait();
+                        // fclose(f);
+                    });
+
+        // f = fopen("stream.h264", "wb");
+
         V4L2Encoder v4leOut(argv[1], {
                                          std::atoi(argv[2]),
                                          std::atoi(argv[3]),
@@ -38,7 +49,7 @@ int main(int argc, char const *argv[])
         };
         AVCodecInit(AVCTX, AVINF);
 
-        FlowThread thread(
+        threadss = new FlowThread(
             [&]
             {
                 v4leOut.V4L2EncodeSet(datain2, dataOut2);
@@ -47,13 +58,15 @@ int main(int argc, char const *argv[])
                     pkt = AVCodecPushFrame2(AVCTX, AVINF, dataOut2.data, dataOut2.bytesperline);
                     std::copy(pkt.data, pkt.data + pkt.size, datain2.data);
                     datain2.size = pkt.size;
+
+                    // fwrite(datain2.data, 1, datain2.size, f);
                 }
 
-                // std::cout << thread.TimeDT << " " << datain2.size << " " << dataOut2.size << "\n\n";
+                // std::cout << threadss->TimeDT << " " << datain2.size << " " << dataOut2.size << "\n\n";
             },
             (float)std::atoi(argv[4]));
 
-        thread.join();
+        sleep(-1);
     }
     return 0;
 }

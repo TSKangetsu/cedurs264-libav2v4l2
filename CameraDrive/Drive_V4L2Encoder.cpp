@@ -223,6 +223,7 @@ V4L2Tools::V4L2Encoder::V4L2Encoder(std::string Device, V4l2Info Info, bool isge
 
 void V4L2Tools::V4L2Encoder::V4L2EncodeSet(V4L2Tools::V4l2Data &VdataIn, V4L2Tools::V4l2Data &VdataOut)
 {
+retry:
     if (VdataIn.maxsize <= 0)
         VdataIn = V4L2Tools::V4l2Data(
             v4l2d.ImgWidth,
@@ -233,7 +234,14 @@ void V4L2Tools::V4L2Encoder::V4L2EncodeSet(V4L2Tools::V4l2Data &VdataIn, V4L2Too
             v4l2.CameraFormat.fmt.pix.bytesperline);
 
     ioctl(_flag_CameraFD, VIDIOC_DQBUF, &v4l2.CameraBuffer);
+
+    // ignore mapping type, alway copy in
+    // if (VdataIn.ismapping)
     VdataIn.data = (unsigned char *)v4l2Buffers[v4l2.CameraBuffer.index];
+    // else
+    // std::copy(VdataIn.data,
+    //           VdataIn.data + VdataIn.size,
+    //           (unsigned char *)v4l2Buffers[v4l2.CameraBuffer.index]);
 
     if (isMPlaneSupported)
         v4l2.CameraBuffer.m.planes->length = VdataIn.maxsize;
@@ -245,6 +253,8 @@ void V4L2Tools::V4L2Encoder::V4L2EncodeSet(V4L2Tools::V4l2Data &VdataIn, V4L2Too
     //
     ioctl(_flag_CameraFD, VIDIOC_QBUF, &v4l2.CameraBuffer);
     //=========================================================================================//
+
+retry2:
     if (VdataOut.maxsize <= 0)
         VdataOut = V4L2Tools::V4l2Data(
             v4l2d.ImgWidth,
@@ -270,6 +280,13 @@ void V4L2Tools::V4L2Encoder::V4L2EncodeSet(V4L2Tools::V4l2Data &VdataIn, V4L2Too
         VdataOut.size = v4l2.CameraBufferOut.m.planes->bytesused;
     else
         VdataOut.size = v4l2.CameraBufferOut.bytesused;
-    VdataOut.data = (unsigned char *)v4l2BuffersOut[v4l2.CameraBufferOut.index];
+
+    if (VdataOut.ismapping)
+        VdataOut.data = (unsigned char *)v4l2BuffersOut[v4l2.CameraBufferOut.index];
+    else
+        std::copy(VdataOut.data,
+                  VdataOut.data + VdataOut.size,
+                  (unsigned char *)v4l2BuffersOut[v4l2.CameraBufferOut.index]);
+
     ioctl(_flag_CameraFD, VIDIOC_QBUF, &v4l2.CameraBufferOut);
 }
