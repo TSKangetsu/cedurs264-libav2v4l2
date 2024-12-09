@@ -77,13 +77,25 @@ inline AVPacket AVCodecPushFrame2(TAVCodecCtx *codecCtx, TAVCodecInfo codecInfo,
     // convert frame to AVFrame
     if (codecInfo.inputPixfmt == AV_PIX_FMT_YUYV422)
     {
+        // int frame_size = codecInfo.width * codecInfo.height;
+        // uint8_t *datain[3];
+        // datain[0] = frameData;
+        // datain[1] = frameData + frame_size;
+        // datain[2] = frameData + frame_size * 5 / 4;
+        // // FIXME: YUYV very slow, seem the dvp rate or cpu lag?
+        // sws_scale(codecCtx->swsCtx, datain, &dataPreline, 0,
+        //           codecInfo.height, codecCtx->frame->data, codecCtx->frame->linesize);
+        //
         int frame_size = codecInfo.width * codecInfo.height;
-        uint8_t *datain[3];
-        datain[0] = frameData;
-        datain[1] = frameData + frame_size;
-        datain[2] = frameData + frame_size * 5 / 4;
-        // FIXME: YUYV very slow, seem the dvp rate or cpu lag?
-        sws_scale(codecCtx->swsCtx, datain, &dataPreline, 0,
+        uint8_t *datain[1];                             // Only one pointer for packed data
+        datain[0] = frameData;                          // YUYV422 packed input
+        int input_line_size[1] = {codecInfo.width * 2}; // YUYV422 line size: 2 bytes per pixel
+
+        // NV12 expects:
+        // - Y plane in `frame->data[0]`
+        // - UV interleaved plane in `frame->data[1]`
+
+        sws_scale(codecCtx->swsCtx, datain, input_line_size, 0,
                   codecInfo.height, codecCtx->frame->data, codecCtx->frame->linesize);
     }
     else if (codecInfo.inputPixfmt = AV_PIX_FMT_NV12)
