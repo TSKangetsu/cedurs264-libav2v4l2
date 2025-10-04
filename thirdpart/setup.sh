@@ -18,8 +18,10 @@ crs=$(find $1 -name "*gcc" | sed 's!.*/!!' | sed 's!gcc!!')
 
 echo "check cross $crs"
 
+make clean
 ./configure \
              --cross-prefix="$crs" \
+             --enable-pic \
              --enable-cross-compile \
              --arch=arm \
              --target-os=linux \

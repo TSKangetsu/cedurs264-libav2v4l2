@@ -9,5 +9,8 @@
     "custom.extenalcmd": " ",
     "custom.targetdir": "/usr/bin/",
     "custom.runwith": " ",
-    "cmake.configureArgs": [],
+    "cmake.configureArgs": [
+        "-DUserEncEnable=true"
+    ],
+    "C_Cpp.autoAddFileAssociations": false,
 }
