@@ -21,6 +21,7 @@ echo "check cross $crs"
 make clean
 ./configure \
              --cross-prefix="$crs" \
+             --cpu=cortex-a7 \
              --enable-pic \
              --enable-cross-compile \
              --arch=arm \

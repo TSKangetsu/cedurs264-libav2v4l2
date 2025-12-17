@@ -23,7 +23,7 @@ inline static const std::map<unsigned int, int> V4L2_to_AV_Format =
 
 void UserEncoderInit(V4l2Info info)
 {
-    std::cout << "[USER ENCODER] Check enc init\n";
+    std::cout << "[USER ENCODER] Check enc init V2\n";
 
     AVPixelFormat targetOption = (AVPixelFormat)V4L2_to_AV_Format.at(info.PixFormat);
     AVCTX = new TAVCodecCtx;
@@ -51,11 +51,15 @@ void UserEncoderExChange(V4l2Data &input, V4l2Data &output)
 {
     innerVdata.size = 0;
     pkt = AVCodecPushFrame2(AVCTX, AVINF, input.data, input.bytesperline);
-    std::copy(pkt.data, pkt.data + pkt.size, innerVdata.data);
+    // std::copy(pkt.data, pkt.data + pkt.size, innerVdata.data);
+
     innerVdata.size = pkt.size;
-    output.ismapping = true;
     innerVdata.ismapping = true;
+    innerVdata.data = pkt.data;
+
+    output.ismapping = true;
     output = innerVdata;
+    // output.data = pkt.data
 
     // std::cout << "[user encoder] check enc run: " << pkt.size << " " << input.size << " " << input.bytesperline << "\n ";
 }
