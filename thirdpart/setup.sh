@@ -28,7 +28,9 @@ make clean
              --target-os=linux \
              --disable-runtime-cpudetect \
              --enable-pthreads \
+             --enable-nonfree \
              --enable-gpl \
+             --enable-vdpau \
              --disable-zlib \
              --enable-version3 \
              --disable-programs \

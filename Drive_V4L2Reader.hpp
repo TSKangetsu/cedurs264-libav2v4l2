@@ -56,10 +56,14 @@ namespace V4L2Tools
         uint8_t *data = nullptr;
         int dmabufFD;
         bool ismapping;
+        bool isFrameAvaliable;
+        bool isBufferModeOnly;
+        std::mutex dataLocking;
         //
         V4l2Data() : id(0), width(0), height(0), maxsize(0),
                      size(0), pixfmt(0), data(nullptr),
-                     bytesperline(0), dmabufFD(-1), ismapping(true) {};
+                     bytesperline(0), dmabufFD(-1), ismapping(true), isFrameAvaliable(false),
+                     isBufferModeOnly(false) {};
         V4l2Data(int width,
                  int height,
                  int maxsize,
@@ -68,7 +72,9 @@ namespace V4L2Tools
                  unsigned int bytesperline,
                  bool ismapping = false,
                  int dmabufFD = -1,
-                 int id = 0)
+                 int id = 0,
+                 bool isFrameAvaliable = false,
+                 bool isBufferModeOnly = false)
         {
             this->id = id;
             this->width = width;
@@ -79,6 +85,8 @@ namespace V4L2Tools
             this->bytesperline = bytesperline;
             this->ismapping = ismapping;
             this->dmabufFD = dmabufFD;
+            this->isFrameAvaliable = isFrameAvaliable;
+            this->isBufferModeOnly = isBufferModeOnly;
             if (!this->ismapping)
             {
 
@@ -93,6 +101,7 @@ namespace V4L2Tools
 
         V4l2Data(V4l2Data &&Data) noexcept
         {
+            std::lock_guard<std::mutex> lock(dataLocking);
             id = Data.id;
             width = Data.width;
             height = Data.height;
@@ -103,6 +112,7 @@ namespace V4L2Tools
             data = Data.data;
             dmabufFD = Data.dmabufFD;
             ismapping = Data.ismapping;
+            isFrameAvaliable = Data.isFrameAvaliable;
             //
             Data.data = nullptr;
             Data.size = 0;
@@ -135,6 +145,7 @@ namespace V4L2Tools
     private:
         void datacopy(const V4l2Data &DataCpy)
         {
+            std::lock_guard<std::mutex> lock(dataLocking);
             id = DataCpy.id;
             width = DataCpy.width;
             height = DataCpy.height;
@@ -143,6 +154,7 @@ namespace V4L2Tools
             pixfmt = DataCpy.pixfmt;
             bytesperline = DataCpy.bytesperline;
             dmabufFD = DataCpy.dmabufFD;
+            isFrameAvaliable = DataCpy.isFrameAvaliable;
             /*
                    when mapped data copy to selfmap,
                    selfmap copy mapping to self,
@@ -201,7 +213,9 @@ namespace V4L2Tools
     class V4L2Drive
     {
     public:
-        V4L2Drive(std::string Device, V4l2Info &Info, std::vector<V4l2Subdev> subdevSet = {{}});
+        V4L2Drive(std::string Device, V4l2Info &Info,
+                  std::vector<V4L2Tools::V4l2Data> &videoBuffer,
+                  std::vector<V4l2Subdev> subdevSet = {{}});
         virtual void V4L2Read(V4L2Tools::V4l2Data &Vdata);
 
         int V4L2FDGetter() { return _flag_CameraFD; };
@@ -251,6 +265,7 @@ namespace V4L2Tools
             v4l2_buffer CameraBufferOut;
             v4l2_fmtdesc CameraFMTInfo;
             int dmaBufFD[16];
+            int bufIndexLast;
         } v4l2;
     };
 
